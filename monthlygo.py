@@ -286,13 +286,13 @@ def get_real_weather(lat, lon):
 
 def get_package_info(price_val):
     if price_val <= 300: 
-        return "Gói Eco", "🎓 **Gói Sinh Viên Eco - Trợ giá tối đa:**\n- 💸 **Miễn phí 100%** các cuốc XE MÁY ngắn dưới 5km.\n- 🛡️ Khóa giá cố định, không bị x2 x3 cước vào giờ kẹt xe.\n- ⚡ **Hỗ trợ 50% Phụ phí Hỏa Tốc** dành riêng cho sinh viên."
+        return "Gói Eco", "🎓 **Gói Sinh Viên Eco - Trợ giá tối đa:**\n-  **Miễn phí 100%** các cuốc XE MÁY ngắn dưới 5km.\n-  Khóa giá cố định, không bị x2 x3 cước vào giờ kẹt xe.\n-  **Hỗ trợ 50% Phụ phí Hỏa Tốc** dành riêng cho sinh viên."
     elif price_val <= 500: 
-        return "Gói Đi Làm", "💼 **Gói Đi Làm - Chấp mọi thời tiết:**\n- ☔ Mưa to? **Nâng cấp Ô-tô tính tiền theo giá Xe Máy**!\n- 🚦 Miễn trừ toàn bộ phụ phí kẹt xe.\n- ⚡ **Hỗ trợ 50% Phụ phí Hỏa Tốc** cho người đi làm."
+        return "Gói Đi Làm", "💼 **Gói Đi Làm - Chấp mọi thời tiết:**\n-  Mưa to? **Nâng cấp Ô-tô tính tiền theo giá Xe Máy**!\n- Miễn trừ toàn bộ phụ phí kẹt xe.\n- **Hỗ trợ 50% Phụ phí Hỏa Tốc** cho người đi làm."
     elif price_val <= 700: 
-        return "Gói Premium", "👨‍👩‍👧 **Gói Premium Gia Đình - Tiện nghi & Ưu tiên:**\n- 🚙 Điều phối độc quyền các dòng xe rộng rãi (Ô-tô 4/7 chỗ VIP).\n- ⚡ **Miễn phí 100% Cước Hỏa Tốc**, tài xế ưu tiên đón mọi lúc."
+        return "Gói Premium", "👨‍👩‍👧 **Gói Premium Gia Đình - Tiện nghi & Ưu tiên:**\n-  Điều phối độc quyền các dòng xe rộng rãi (Ô-tô 4/7 chỗ VIP).\n-  **Miễn phí 100% Cước Hỏa Tốc**, tài xế ưu tiên đón mọi lúc."
     else: 
-        return "Gói Doanh Nhân", "👑 **Gói VVIP Doanh Nhân - Quyền Lực Tối Thượng:**\n- 💳 **0đ cho mọi chuyến đi!** Chỉ cần lên xe, hệ thống lo phần còn lại.\n- 🤵 Tài xế Elite phục vụ riêng biệt 24/7."
+        return "Gói Doanh Nhân", "👑 **Gói VVIP Doanh Nhân - Quyền Lực Tối Thượng:**\n- 💳 **0đ cho mọi chuyến đi!** Chỉ cần lên xe, hệ thống lo phần còn lại.\n-  Tài xế Elite phục vụ riêng biệt 24/7."
 
 ALL_PACKAGES = ["Gói Eco", "Gói Đi Làm", "Gói Premium", "Gói Doanh Nhân"]
 
@@ -510,7 +510,7 @@ if km_final > 0:
     elif "Xe Máy" in user_veh and w_val == 8:
         st.warning("☔ Trời đang có mưa. Dịch vụ Xe Máy vẫn hoạt động bình thường, nhưng khuyên dùng Ô-tô để có trải nghiệm tốt nhất nha!")
         
-    st.error(f"🚦 **Cảnh báo từ vệ tinh:** Tình trạng giao thông trên tuyến đường hiện tại đang: **{st.session_state.demo_traffic}**")
+    st.error(f" **Cảnh báo từ vệ tinh:** Tình trạng giao thông trên tuyến đường hiện tại đang: **{st.session_state.demo_traffic}**")
     
     if can_book:
         peak_val = 10 if "Thông" in st.session_state.demo_traffic else 50 if "Ùn" in st.session_state.demo_traffic else 90
@@ -541,11 +541,11 @@ if km_final > 0:
         if st.session_state.package:
             if st.session_state.package == "Gói Doanh Nhân":
                 final_pay = 0
-                st.info("🚀 **ÁP DỤNG ĐẶC QUYỀN DOANH NHÂN:** Chuyến đi này hoàn toàn MIỄN PHÍ!")
+                st.info(" **ÁP DỤNG ĐẶC QUYỀN DOANH NHÂN:** Chuyến đi này hoàn toàn MIỄN PHÍ!")
                 
             elif st.session_state.package == "Gói Đi Làm":
                 if "Ô tô" in user_veh and w_val >= 7:
-                    final_pay = (km_final * veh_dict["🏍️ Xe Máy Thường"]["rate"]) * urgent_surcharge_eco
+                    final_pay = (km_final * veh_dict[" Xe Máy Thường"]["rate"]) * urgent_surcharge_eco
                     st.info("**ÁP DỤNG ĐẶC QUYỀN ĐI LÀM:** Mưa to, nâng cấp cuốc Ô-tô nhưng CHỈ TÍNH TIỀN THEO GIÁ XE MÁY!")
                 else:
                     final_pay = base_price * urgent_surcharge_eco
