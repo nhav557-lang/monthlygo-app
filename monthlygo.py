@@ -64,19 +64,19 @@ st.markdown(f"""
 # DANH SÁCH ĐỊA ĐIỂM NỔI BẬT
 # ==========================================
 QUICK_LOCATIONS = {
-    "🏢 UEH Cơ sở A (Nguyễn Đình Chiểu)": (10.7828, 106.6946),
-    "🏢 UEH Cơ sở B (Nguyễn Tri Phương)": (10.7731, 106.6697),
-    "🏢 UEH Cơ sở C (Mạc Đĩnh Chi)": (10.7816, 106.6908),
-    "🏢 UEH Cơ sở E (Trần Quang Khải)": (10.7801, 106.6876),
-    "🏢 UEH Cơ sở N (Nguyễn Văn Linh)": (10.7130, 106.6784),
-    "✈️ Sân bay Tân Sơn Nhất": (10.8185, 106.6660),
-    "🏛️ Dinh Độc Lập": (10.7770, 106.6953),
-    "🦁 Thảo Cầm Viên": (10.7875, 106.7053),
-    "🎢 Công viên Đầm Sen": (10.7675, 106.6384),
-    "🎓 Đại Học Bách Khoa HCM": (10.7734, 106.6606),
-    "🎓 Đại học Khoa học Tự nhiên HCM": (10.7631, 106.6823),
-    "🎓 Đại học Công nghệ Thông tin UIT": (10.8700, 106.8031),
-    "🏞️ Hồ Gươm (Hà Nội)": (21.0285, 105.8523)
+    " UEH Cơ sở A (Nguyễn Đình Chiểu)": (10.7828, 106.6946),
+    " UEH Cơ sở B (Nguyễn Tri Phương)": (10.7731, 106.6697),
+    " UEH Cơ sở C (Mạc Đĩnh Chi)": (10.7816, 106.6908),
+    " UEH Cơ sở E (Trần Quang Khải)": (10.7801, 106.6876),
+    " UEH Cơ sở N (Nguyễn Văn Linh)": (10.7130, 106.6784),
+    " Sân bay Tân Sơn Nhất": (10.8185, 106.6660),
+    "Dinh Độc Lập": (10.7770, 106.6953),
+    " Thảo Cầm Viên": (10.7875, 106.7053),
+    " Công viên Đầm Sen": (10.7675, 106.6384),
+    " Đại Học Bách Khoa HCM": (10.7734, 106.6606),
+    " Đại học Khoa học Tự nhiên HCM": (10.7631, 106.6823),
+    " Đại học Công nghệ Thông tin UIT": (10.8700, 106.8031),
+    " Hồ Gươm (Hà Nội)": (21.0285, 105.8523)
 }
 
 # ==========================================
@@ -282,13 +282,13 @@ def get_real_weather(lat, lon):
         temp = res['current_weather']['temperature']
         code = res['current_weather']['weathercode']
         if code in [65, 67, 82, 95, 96, 99]: 
-            return 10, f"Mưa rất to/Bão ⛈️ ({temp}°C)"
+            return 10, f"Mưa rất to/Bão ({temp}°C)"
         elif temp >= 32:
-            return 4, f"Trời Nắng Nóng 🥵 ({temp}°C)"
+            return 4, f"Trời Nắng Nóng  ({temp}°C)"
         elif code in [51, 53, 55, 61, 63, 80, 81]: 
-            return 8, f"Có Mưa ☔ ({temp}°C)"
+            return 8, f"Có Mưa  ({temp}°C)"
         else: 
-            return 1, f"Trời Đẹp ☀️ ({temp}°C)"
+            return 1, f"Trời Đẹp  ({temp}°C)"
     except: return 1, "Chưa xác định (25°C)"
 
 def get_package_info(price_val):
@@ -324,7 +324,7 @@ if not st.session_state.logged_in:
                 st.rerun()
     with tab2:
         mock_choice = st.selectbox("Chọn Hồ sơ Giả lập:", list(MOCK_ACCOUNTS.keys()))
-        if st.button("🧪 Chạy Demo App"):
+        if st.button(" Chạy Demo App"):
             st.session_state.logged_in = True
             st.session_state.is_demo = True 
             st.session_state.user_name = mock_choice.split(" (")[0]
@@ -348,7 +348,7 @@ with st.sidebar:
         st.session_state.demo_traffic = st.selectbox("🚦 Ép Kẹt xe:", ["Thông thoáng 🟢", "Ùn ứ 🟡", "Kẹt Cứng 🔴"])
     if st.session_state.is_demo:
         with st.expander("🛠️ ADMIN PANEL", expanded=True):
-            st.session_state.demo_weather = st.selectbox("⛅ Ép Thời tiết Demo:", ["Thực tế (API)", "Trời đẹp ☀️", "Trời Nắng Nóng 🥵", "Có Mưa ☔", "Mưa Bão Cực Đoan ⛈️"])
+            st.session_state.demo_weather = st.selectbox("⛅ Ép Thời tiết Demo:", ["Thực tế (API)", "Trời đẹp ", "Trời Nắng Nóng ", "Có Mưa ", "Mưa Bão Cực Đoan "])
             st.session_state.freq = st.slider("Tần suất đi:", 0, 10, st.session_state.freq)
             st.session_state.point = st.slider("Điểm Loyalty:", 0, 10, st.session_state.point)
             force_pkg = st.selectbox("Bơm trực tiếp Gói:", ["-- Chọn gói --"] + ALL_PACKAGES)
@@ -370,7 +370,7 @@ col_b.markdown(get_html_badge(st.session_state.package), unsafe_allow_html=True)
 col_p, col_w = st.columns(2)
 with col_p:
     if st.session_state.package:
-        st.success(f"✅ Gói của bạn: **{st.session_state.package}**")
+        st.success(f"Gói của bạn: **{st.session_state.package}**")
         if st.button("❌ Hủy Gói"):
             st.session_state.package = None
             st.rerun()
@@ -386,20 +386,20 @@ with c1:
     vn_time = datetime.now() + timedelta(hours=7)
     st.metric("🕒 Giờ Việt Nam", vn_time.strftime('%H:%M'))
     
-    s_c = st.selectbox("📍 Điểm Đón:", ["🗺️ Tự nhập"] + list(QUICK_LOCATIONS.keys()), key="sq")
-    s_l = QUICK_LOCATIONS[s_c] if s_c != "🗺️ Tự nhập" else st_searchbox(search_address, key="s")
+    s_c = st.selectbox("📍 Điểm Đón:", [" Tự nhập"] + list(QUICK_LOCATIONS.keys()), key="sq")
+    s_l = QUICK_LOCATIONS[s_c] if s_c != " Tự nhập" else st_searchbox(search_address, key="s")
     
     w_v, w_tx = 1, "Chờ GPS..."
     if s_l:
         if st.session_state.demo_weather == "Thực tế (API)": w_v, w_tx = get_real_weather(s_l[0], s_l[1])
-        elif st.session_state.demo_weather == "Trời đẹp ☀️": w_v, w_tx = 1, "Trời đẹp ☀️"
-        elif st.session_state.demo_weather == "Trời Nắng Nóng 🥵": w_v, w_tx = 4, "Trời Nắng Nóng 🥵"
-        elif st.session_state.demo_weather == "Có Mưa ☔": w_v, w_tx = 8, "Có Mưa ☔"
-        else: w_v, w_tx = 10, "Mưa Bão ⛈️"
+        elif st.session_state.demo_weather == "Trời đẹp ": w_v, w_tx = 1, "Trời đẹp "
+        elif st.session_state.demo_weather == "Trời Nắng Nóng ": w_v, w_tx = 4, "Trời Nắng Nóng "
+        elif st.session_state.demo_weather == "Có Mưa ": w_v, w_tx = 8, "Có Mưa ☔"
+        else: w_v, w_tx = 10, "Mưa Bão "
     st.metric("🌦️ Thời tiết", w_tx)
 
-    e_c = st.selectbox("🏁 Điểm Đến:", ["🗺️ Tự nhập"] + list(QUICK_LOCATIONS.keys()), key="eq")
-    e_l = QUICK_LOCATIONS[e_c] if e_c != "🗺️ Tự nhập" else st_searchbox(search_address, key="e")
+    e_c = st.selectbox("🏁 Điểm Đến:", [" Tự nhập"] + list(QUICK_LOCATIONS.keys()), key="eq")
+    e_l = QUICK_LOCATIONS[e_c] if e_c != " Tự nhập" else st_searchbox(search_address, key="e")
     
     veh_dict = {"🏍️ Xe Máy Thường": {"rate": 6000, "budget": 2}, "🚗 Ô tô 4 Chỗ": {"rate": 12000, "budget": 5}}
     u_v = st.selectbox("Phương tiện:", list(veh_dict.keys()))
@@ -436,5 +436,5 @@ if km > 0:
             st.session_state.loyalty_points_wallet += (int(o_pts) if f_p > 0 else 0)
             st.balloons(); st.success("Xong!"); time.sleep(1); st.rerun()
 
-        st.subheader("🛍️ Gợi ý gói cước")
+        st.subheader(" Gợi ý gói cước")
         if not st.session_state.package: st.success(f"🤖 Gợi ý: **{pkg_n}**\n\n{pkg_d}")
