@@ -1,6 +1,7 @@
 streamlit
 numpy
 scipy
+networkx
 scikit-fuzzy
 requests
 folium
