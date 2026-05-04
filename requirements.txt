@@ -1,5 +1,6 @@
 streamlit
 numpy
+scipy
 scikit-fuzzy
 requests
 folium
