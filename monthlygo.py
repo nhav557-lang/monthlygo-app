@@ -6,32 +6,29 @@ import requests
 import folium
 from streamlit_folium import st_folium
 import polyline
-from datetime import datetime, timedelta  # Thêm timedelta để chỉnh múi giờ
+from datetime import datetime
 from geopy.distance import geodesic
 from streamlit_searchbox import st_searchbox
 import matplotlib.pyplot as plt
 import random
 import time
 
-# ==========================================
-# KHỞI TẠO ĐƯỜNG DẪN LOGO LOCAL & CẤU HÌNH TRANG
-# ==========================================
+
 LOGO_PATH = "logo.jpg"
 
 st.set_page_config(page_title="MonthlyGo - Đặt Xe & Gói Cước", page_icon="⏱️", layout="wide")
 
-# ==========================================
-# CSS NHUỘM MÀU THƯƠNG HIỆU & FIX LỖI DARK MODE
-# ==========================================
 st.markdown(f"""
 <style>
     [data-testid="stSidebar"] {{ background-color: #F8F5FF; }}
+    
     [data-testid="stSidebar"] label, 
     [data-testid="stSidebar"] p, 
     [data-testid="stSidebar"] span, 
     [data-testid="stSidebar"] div {{
         color: #4A148C !important;
     }}
+
     div.stButton > button[kind="primary"] {{
         background-color: #4A148C !important;
         color: white !important;
@@ -60,9 +57,6 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# DANH SÁCH ĐỊA ĐIỂM NỔI BẬT
-# ==========================================
 QUICK_LOCATIONS = {
     " UEH Cơ sở A (Nguyễn Đình Chiểu)": (10.7828, 106.6946),
     " UEH Cơ sở B (Nguyễn Tri Phương)": (10.7731, 106.6697),
@@ -70,18 +64,16 @@ QUICK_LOCATIONS = {
     " UEH Cơ sở E (Trần Quang Khải)": (10.7801, 106.6876),
     " UEH Cơ sở N (Nguyễn Văn Linh)": (10.7130, 106.6784),
     " Sân bay Tân Sơn Nhất": (10.8185, 106.6660),
-    "Dinh Độc Lập": (10.7770, 106.6953),
+    " Dinh Độc Lập": (10.7770, 106.6953),
     " Thảo Cầm Viên": (10.7875, 106.7053),
-    " Công viên Đầm Sen": (10.7675, 106.6384),
+    "Công viên Đầm Sen": (10.7675, 106.6384),
     " Đại Học Bách Khoa HCM": (10.7734, 106.6606),
     " Đại học Khoa học Tự nhiên HCM": (10.7631, 106.6823),
     " Đại học Công nghệ Thông tin UIT": (10.8700, 106.8031),
     " Hồ Gươm (Hà Nội)": (21.0285, 105.8523)
 }
 
-# ==========================================
-# KHỞI TẠO SESSION STATE
-# ==========================================
+
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'user_name' not in st.session_state:
@@ -111,9 +103,6 @@ def get_html_badge(pkg_name):
     if "Doanh Nhân" in pkg_name: return "<div style='background:#D48E15; color:white; padding:4px 12px; border-radius:15px; font-weight:bold; font-size:12px; float:right; box-shadow: 0px 2px 5px rgba(0,0,0,0.2);'>👑 VVIP DOANH NHÂN</div>"
     return ""
 
-# ==========================================
-# 1. BỘ NÃO AI: 80 LUẬT KINH DOANH TỐI ƯU
-# ==========================================
 @st.cache_resource
 def build_ai_brain():
     distance = ctrl.Antecedent(np.arange(0, 31, 1), 'distance')
@@ -161,7 +150,7 @@ def build_ai_brain():
     reward_pts['x5'] = fuzz.trimf(reward_pts.universe, [4, 5, 5])
 
     rules = [
-        # NHÓM 1: CƠ BẢN
+        # Cơ bản
         ctrl.Rule(budget_flex['low'] & distance['short'], (price['eco200'], reward_pts['x2'])),
         ctrl.Rule(budget_flex['low'] & distance['medium'], (price['eco200'], reward_pts['x3'])),
         ctrl.Rule(budget_flex['low'] & distance['long'], (price['com400'], reward_pts['x5'])),
@@ -182,7 +171,8 @@ def build_ai_brain():
         ctrl.Rule(point['vip'] & frequency['high'], (price['vip800'], reward_pts['x3'])),
         ctrl.Rule(frequency['high'] & budget_flex['low'], (price['eco200'], reward_pts['x5'])),
         ctrl.Rule(frequency['high'] & budget_flex['high'], (price['vip800'], reward_pts['x3'])),
-        # NHÓM 2: HỎA TỐC
+
+        #  Hỏa tốc
         ctrl.Rule(urgency_level['urgent'] & budget_flex['low'] & distance['short'], (price['eco200'], reward_pts['x5'])),
         ctrl.Rule(urgency_level['urgent'] & budget_flex['low'] & distance['medium'], (price['com400'], reward_pts['x5'])),
         ctrl.Rule(urgency_level['urgent'] & budget_flex['low'] & distance['long'], (price['com400'], reward_pts['x5'])),
@@ -203,7 +193,8 @@ def build_ai_brain():
         ctrl.Rule(urgency_level['urgent'] & weather['good'], (price['com400'], reward_pts['x3'])),
         ctrl.Rule(urgency_level['urgent'] & peak_ratio['clear'], (price['com400'], reward_pts['x2'])),
         ctrl.Rule(urgency_level['chill'] & peak_ratio['heavy'], (price['eco200'], reward_pts['x3'])),
-        # NHÓM 3: THỜI TIẾT & KẸT XE
+
+        # Thời tiết và kẹt xe
         ctrl.Rule(weather['extreme'] & budget_flex['low'], (price['com400'], reward_pts['x5'])),
         ctrl.Rule(weather['extreme'] & budget_flex['medium'], (price['pre600'], reward_pts['x5'])),
         ctrl.Rule(weather['extreme'] & budget_flex['high'], (price['vip800'], reward_pts['x3'])),
@@ -224,7 +215,8 @@ def build_ai_brain():
         ctrl.Rule(peak_ratio['clear'] & budget_flex['high'], (price['com400'], reward_pts['x1'])),
         ctrl.Rule(weather['bad'] & peak_ratio['heavy'] & budget_flex['low'], (price['com400'], reward_pts['x5'])),
         ctrl.Rule(weather['extreme'] & peak_ratio['heavy'], (price['vip800'], reward_pts['x5'])),
-        # NHÓM 4: CHUẨN HÓA
+
+        #TH Đặc biệt
         ctrl.Rule(distance['short'] & frequency['low'] & weather['good'], (price['eco200'], reward_pts['x1'])),
         ctrl.Rule(distance['long'] & frequency['high'] & weather['bad'], (price['pre600'], reward_pts['x5'])),
         ctrl.Rule(urgency_level['chill'] & point['newbie'] & distance['short'], (price['eco200'], reward_pts['x1'])),
@@ -251,9 +243,7 @@ def build_ai_brain():
 sub_ctrl = build_ai_brain()
 subscription = ctrl.ControlSystemSimulation(sub_ctrl)
 
-# ==========================================
-# 2. XỬ LÝ API
-# ==========================================
+
 def search_address(search_term: str):
     if not search_term or len(search_term) < 3: return []
     try:
@@ -281,14 +271,17 @@ def get_real_weather(lat, lon):
         res = requests.get(url, timeout=5).json()
         temp = res['current_weather']['temperature']
         code = res['current_weather']['weathercode']
+        
         if code in [65, 67, 82, 95, 96, 99]: 
-            return 10, f"Mưa rất to/Bão ({temp}°C)"
-        elif temp >= 32:
-            return 4, f"Trời Nắng Nóng  ({temp}°C)"
+            return 10, f"Mưa rất to/Bão ⛈️ ({temp}°C)"
         elif code in [51, 53, 55, 61, 63, 80, 81]: 
-            return 8, f"Có Mưa  ({temp}°C)"
+            return 8, f"Có Mưa ☔ ({temp}°C)" 
+       
         else: 
-            return 1, f"Trời Đẹp  ({temp}°C)"
+            if temp >= 32:
+                return 4, f"Trời Nắng Nóng 🥵 ({temp}°C)" 
+            else:
+                return 1, f"Trời Đẹp ☀️ ({temp}°C)"
     except: return 1, "Chưa xác định (25°C)"
 
 def get_package_info(price_val):
@@ -303,144 +296,367 @@ def get_package_info(price_val):
 
 ALL_PACKAGES = ["Gói Eco", "Gói Đi Làm", "Gói Premium", "Gói Doanh Nhân"]
 
-# ==========================================
-# 3. MÀN HÌNH ĐĂNG NHẬP
-# ==========================================
 if not st.session_state.logged_in:
     c1, c2, c3 = st.columns([1, 1, 1])
     with c2:
         st.image(LOGO_PATH, use_container_width=True)
+    
     st.markdown("<h1 style='text-align: center;'>Chào mừng đến với MonthlyGo</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Giải pháp di chuyển thông minh bằng Gói cước AI</p>", unsafe_allow_html=True)
     st.write("---")
-    tab1, tab2 = st.tabs(["👤 Đăng nhập Khách Mới", "🎭 Đăng nhập Tài khoản Demo"])
+
+    tab1, tab2 = st.tabs(["👤 Đăng nhập Khách Mới (Thực tế)", "🎭 Đăng nhập Tài khoản Demo (Test)"])
+    
     with tab1:
+        st.info("Trải nghiệm luồng Khách hàng. Các thông số sẽ bị ẩn, chỉ hiển thị UI thân thiện.")
         user_input = st.text_input("Tên của bạn:", key="new_user_input", placeholder="VD: Thanh Nhã...")
         if st.button("🚀 Bắt Đầu Ngay (Khách thật)", type="primary"):
             if user_input.strip() == "": st.error("Vui lòng nhập tên!")
             else:
                 st.session_state.logged_in = True
+                st.session_state.is_demo = False 
                 st.session_state.user_name = user_input
+                st.session_state.freq = 0
+                st.session_state.point = 0
+                st.session_state.urgency_base = 1
+                st.session_state.loyalty_points_wallet = 0
+                st.session_state.demo_traffic = "Thông thoáng 🟢"
                 st.session_state.demo_weather = "Thực tế (API)" 
                 st.rerun()
+                
     with tab2:
+        st.info("Dành cho Developer: Bật khóa công cụ ép giá, ép thời tiết, ép gói cước bên Sidebar.")
         mock_choice = st.selectbox("Chọn Hồ sơ Giả lập:", list(MOCK_ACCOUNTS.keys()))
-        if st.button(" Chạy Demo App"):
+        if st.button("🧪 Chạy Demo App"):
             st.session_state.logged_in = True
             st.session_state.is_demo = True 
             st.session_state.user_name = mock_choice.split(" (")[0]
             acc = MOCK_ACCOUNTS[mock_choice]
-            st.session_state.freq, st.session_state.point, st.session_state.urgency_base, st.session_state.loyalty_points_wallet = acc["freq"], acc["point"], acc["urg"], acc["wallet"]
+            st.session_state.freq = acc["freq"]
+            st.session_state.point = acc["point"]
+            st.session_state.urgency_base = acc["urg"]
+            st.session_state.loyalty_points_wallet = acc["wallet"]
+            st.session_state.demo_traffic = "Thông thoáng 🟢"
             st.session_state.demo_weather = "Thực tế (API)"
             st.rerun()
     st.stop() 
 
-# ==========================================
-# 4. GIAO DIỆN CHÍNH
-# ==========================================
-col_h1, col_h2 = st.columns([1, 15])
-with col_h1: st.image(LOGO_PATH, width=60)
-with col_h2: st.title("MonthlyGo - Tiết kiệm thời gian, Tối ưu chi phí")
 
-# SIDEBAR
+col_h1, col_h2 = st.columns([1, 15])
+with col_h1:
+    st.image(LOGO_PATH, width=60)
+with col_h2:
+    st.title("MonthlyGo - Tiết kiệm thời gian, Tối ưu chi phí")
+
+
 with st.sidebar:
     st.image(LOGO_PATH, use_container_width=True)
-    with st.expander("🛰️ ĐIỀU KHIỂN VỆ TINH", expanded=True):
+    st.markdown("<h2 style='text-align:center;'>Bảng Điều Khiển</h2>", unsafe_allow_html=True)
+    
+    with st.expander("🛰️ ĐIỀU KHIỂN VỆ TINH (Presenter)", expanded=True):
+        st.caption("Chỉnh thông số trước, Khách chọn đường xong mới thấy:")
         st.session_state.demo_traffic = st.selectbox("🚦 Ép Kẹt xe:", ["Thông thoáng 🟢", "Ùn ứ 🟡", "Kẹt Cứng 🔴"])
+        
     if st.session_state.is_demo:
-        with st.expander("🛠️ ADMIN PANEL", expanded=True):
-            st.session_state.demo_weather = st.selectbox("⛅ Ép Thời tiết Demo:", ["Thực tế (API)", "Trời đẹp ", "Trời Nắng Nóng ", "Có Mưa ", "Mưa Bão Cực Đoan "])
+        with st.expander("🛠️ ADMIN PANEL (Ép Profile/Gói/Thời Tiết)", expanded=True):
+            st.session_state.demo_weather = st.selectbox("⛅ Ép Thời tiết Demo:", [
+                "Thực tế (API)", 
+                "Trời đẹp ☀️", 
+                "Trời Nắng Nóng 🥵", 
+                "Có Mưa ☔", 
+                "Mưa Bão Cực Đoan ⛈️"
+            ])
+            st.markdown("---")
+            st.caption("Ép Profile Khách hàng:")
             st.session_state.freq = st.slider("Tần suất đi:", 0, 10, st.session_state.freq)
             st.session_state.point = st.slider("Điểm Loyalty:", 0, 10, st.session_state.point)
+            st.markdown("---")
             force_pkg = st.selectbox("Bơm trực tiếp Gói:", ["-- Chọn gói --"] + ALL_PACKAGES)
-            if st.button("Bơm Gói"):
+            if st.button(" Bơm Gói (Dev Test)"):
                 if force_pkg != "-- Chọn gói --":
                     st.session_state.package = force_pkg
-                    st.toast(f"Đã bơm {force_pkg}!")
+                    st.session_state.is_trial = False
+                    st.toast(f"Đã bơm {force_pkg} thành công!", icon='💉')
                     st.rerun()
-    if st.button("🔴 Đăng xuất"):
-        for key in list(st.session_state.keys()): del st.session_state[key]
+    
+    if st.button("🔴 Đăng xuất MonthlyGo"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
         st.rerun()
 
-# KHÁCH HÀNG & VÍ
 st.markdown("<hr style='border: 2px solid #E6E6FA;'/>", unsafe_allow_html=True)
-col_n, col_b = st.columns([3, 1])
-col_n.markdown(f"### 👤 Xin chào, **{st.session_state.user_name}**")
-col_b.markdown(get_html_badge(st.session_state.package), unsafe_allow_html=True)
 
-col_p, col_w = st.columns(2)
-with col_p:
+col_name, col_badge = st.columns([3, 1])
+with col_name:
+    st.markdown(f"### 👤 Xin chào, **{st.session_state.user_name}**")
+with col_badge:
+    html_badge = get_html_badge(st.session_state.package)
+    st.markdown(html_badge, unsafe_allow_html=True)
+
+col_pkg, col_wallet = st.columns(2)
+with col_pkg:
     if st.session_state.package:
-        st.success(f"Gói của bạn: **{st.session_state.package}**")
-        if st.button("❌ Hủy Gói"):
+        if st.session_state.is_trial:
+            st.success(f"🎟️ Đang dùng thử: **{st.session_state.package}** (Chỉ áp dụng 1 cuốc xe)")
+        else:
+            st.success(f" Gói của bạn: **{st.session_state.package}** (Đặc quyền Không giới hạn)")
+            
+        if st.button("❌ Hủy Gói / Đổi Gói Khác"):
             st.session_state.package = None
+            st.session_state.is_trial = False 
+            st.toast("Đã hủy gói cước. Bạn có thể chọn mua gói khác!", icon="🗑️")
             st.rerun()
-    else: st.info(" Bạn chưa đăng ký gói cước nào.")
-with col_w:
-    st.markdown(f"<div class='wallet-box'><h4>🌟 Ví Điểm: <span style='font-size:28px;'>{st.session_state.loyalty_points_wallet}</span></h4></div>", unsafe_allow_html=True)
+    else:
+        st.info("💡 Trạng thái: Bạn hiện **CHƯA ĐĂNG KÝ** gói cước nào.")
 
-# ĐẶT CHUYẾN
+with col_wallet:
+    st.markdown(f"<div class='wallet-box'>"
+                f"<h4 style='margin:0; color:#4A148C;'>🌟 Ví Điểm Thưởng: <span style='color:#D48E15; font-size:28px;'>{st.session_state.loyalty_points_wallet}</span></h4>"
+                f"</div>", unsafe_allow_html=True)
+    
+    with st.expander("Cửa hàng Quy đổi Điểm thưởng"):
+        st.write("Tích lũy điểm sau mỗi chuyến đi để đổi phần quà:")
+        st.write("- **50 Điểm:** 🎫 Mã giảm giá 20% (Tối đa 50k)")
+        st.write("- **100 Điểm:** 🚕 01 Cuốc xe dưới 5km giá 0đ")
+        st.write("- **200 Điểm:** 💎 Trải nghiệm Premium 1 ngày")
+        if st.session_state.loyalty_points_wallet >= 50:
+            if st.button("👉 Đổi Mã Giảm Giá (Trừ 50đ)"):
+                st.session_state.loyalty_points_wallet -= 50
+                st.toast("Đổi mã thành công! Mã ưu đãi đã được lưu vào ví.", icon="🎟️")
+                st.rerun()
+
+st.markdown("<hr style='border: 2px solid #E6E6FA;'/>", unsafe_allow_html=True)
+
 st.subheader("📍 Đặt xe cùng MonthlyGo")
-c1, c2 = st.columns([1, 1.5])
-with c1:
-    # --- FIX GIỜ VIỆT NAM TẠI ĐÂY ---
-    vn_time = datetime.now() + timedelta(hours=7)
-    st.metric("🕒 Giờ Việt Nam", vn_time.strftime('%H:%M'))
-    
-    s_c = st.selectbox("📍 Điểm Đón:", [" Tự nhập"] + list(QUICK_LOCATIONS.keys()), key="sq")
-    s_l = QUICK_LOCATIONS[s_c] if s_c != " Tự nhập" else st_searchbox(search_address, key="s")
-    
-    w_v, w_tx = 1, "Chờ GPS..."
-    if s_l:
-        if st.session_state.demo_weather == "Thực tế (API)": w_v, w_tx = get_real_weather(s_l[0], s_l[1])
-        elif st.session_state.demo_weather == "Trời đẹp ": w_v, w_tx = 1, "Trời đẹp "
-        elif st.session_state.demo_weather == "Trời Nắng Nóng ": w_v, w_tx = 4, "Trời Nắng Nóng "
-        elif st.session_state.demo_weather == "Có Mưa ": w_v, w_tx = 8, "Có Mưa ☔"
-        else: w_v, w_tx = 10, "Mưa Bão "
-    st.metric("🌦️ Thời tiết", w_tx)
+c_map1, c_map2 = st.columns([1, 1.5])
 
-    e_c = st.selectbox("🏁 Điểm Đến:", [" Tự nhập"] + list(QUICK_LOCATIONS.keys()), key="eq")
-    e_l = QUICK_LOCATIONS[e_c] if e_c != " Tự nhập" else st_searchbox(search_address, key="e")
+with c_map1:
+    col_t, col_w = st.columns(2)
+    col_t.metric("🕒 Giờ hệ thống", datetime.now().strftime('%H:%M'))
+    
+    start_choice = st.selectbox("📍 Chọn nhanh Điểm Đón:", ["🗺️ Tự nhập địa chỉ (Tìm kiếm)"] + list(QUICK_LOCATIONS.keys()), key="start_quick")
+    if start_choice == "🗺️ Tự nhập địa chỉ (Tìm kiếm)":
+        start_loc = st_searchbox(search_address, key="start", placeholder="Nhập địa chỉ điểm đón...")
+    else:
+        start_loc = QUICK_LOCATIONS[start_choice]
+
+    w_val, w_text = 1, "Đang chờ GPS..."
+    if start_loc:
+        if st.session_state.demo_weather == "Thực tế (API)":
+            w_val, w_text = get_real_weather(start_loc[0], start_loc[1])
+        elif st.session_state.demo_weather == "Trời đẹp ☀️":
+            w_val, w_text = 1, "Trời đẹp ☀️ (Giả lập Demo)"
+        elif st.session_state.demo_weather == "Trời Nắng Nóng 🥵":
+            w_val, w_text = 4, "Trời Nắng Nóng 🥵 (Giả lập Demo)"
+        elif st.session_state.demo_weather == "Có Mưa ☔":
+            w_val, w_text = 8, "Có Mưa ☔ (Giả lập Demo)"
+        else:
+            w_val, w_text = 10, "Mưa Bão Cực Đoan ⛈️ (Giả lập Demo)"
+            
+    col_w.metric("🌦️ Thời tiết", w_text)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    end_choice = st.selectbox("🏁 Chọn nhanh Điểm Đến:", [" Tự nhập địa chỉ (Tìm kiếm)"] + list(QUICK_LOCATIONS.keys()), key="end_quick")
+    if end_choice == " Tự nhập địa chỉ (Tìm kiếm)":
+        end_loc = st_searchbox(search_address, key="end", placeholder="Nhập địa chỉ điểm đến...")
+    else:
+        end_loc = QUICK_LOCATIONS[end_choice]
+    
+    if st.button("🔄 Làm mới / Xóa Lộ trình"):
+        if "start" in st.session_state: del st.session_state["start"]
+        if "end" in st.session_state: del st.session_state["end"]
+        if "start_quick" in st.session_state: del st.session_state["start_quick"]
+        if "end_quick" in st.session_state: del st.session_state["end_quick"]
+        st.rerun()
     
     veh_dict = {
-               " Xe Máy Thường": {"rate": 6000, "budget": 2},
+        " Xe Máy Thường": {"rate": 6000, "budget": 2},
         " Xe Máy VIP": {"rate": 8000, "budget": 4},
         " Ô tô 4 Chỗ Thường": {"rate": 12000, "budget": 5},
         " Ô tô 4 Chỗ VIP": {"rate": 16000, "budget": 8},
         " Ô tô 7 Chỗ": {"rate": 15000, "budget": 7},
-        "Ô tô 7 Chỗ VIP": {"rate": 20000, "budget": 10}}
-    u_v = st.selectbox("Phương tiện:", list(veh_dict.keys()))
-    is_u = st.checkbox("⚡ Đặt Hỏa Tốc")
-    km, path = 0.0, []
-    if s_l and e_l: km, _, path = get_route(s_l, e_l)
+        "Ô tô 7 Chỗ VIP": {"rate": 20000, "budget": 10}
+    }
+    user_veh = st.selectbox("Chọn phương tiện:", list(veh_dict.keys()))
+    base_rate = veh_dict[user_veh]["rate"]
+    budget_val = veh_dict[user_veh]["budget"]
+    
+    is_urgent = st.checkbox(" Đặt Hỏa Tốc (Cần đi ngay)")
+    final_urgency = 10 if is_urgent else st.session_state.urgency_base
+    
+    km_final, time_min, path_coords = 0.0, 0.0, []
 
-with c2:
+    if start_loc and end_loc:
+        with st.spinner("Đang định tuyến hệ thống vệ tinh..."):
+            km_final, time_min, path_coords = get_route(start_loc, end_loc)
+
+with c_map2:
     m = folium.Map(location=[10.7626, 106.6601], zoom_start=13)
-    if s_l: folium.Marker(s_l, icon=folium.Icon(color='green')).add_to(m)
-    if e_l: folium.Marker(e_l, icon=folium.Icon(color='red')).add_to(m)
-    if path: folium.PolyLine(path, color="purple", weight=5).add_to(m); m.fit_bounds([s_l, e_l])
-    st_folium(m, width="100%", height=400)
+    if start_loc: folium.Marker(start_loc, icon=folium.Icon(color='green')).add_to(m)
+    if end_loc: folium.Marker(end_loc, icon=folium.Icon(color='red')).add_to(m)
+    if path_coords:
+        folium.PolyLine(path_coords, color="purple", weight=5).add_to(m) 
+        m.fit_bounds([start_loc, end_loc])
+    st_folium(m, width="100%", height=450)
 
-if km > 0:
-    st.markdown("---")
-    can_b = True
-    if "Xe Máy" in u_v and w_v >= 10: st.error(" Bão cực đoan, ngưng xe máy!"); can_b = False
-    if can_b:
-        p_v = 10 if "Thông" in st.session_state.demo_traffic else 90
-        subscription.input['distance'], subscription.input['frequency'], subscription.input['peak_ratio'], subscription.input['budget_flex'], subscription.input['weather'], subscription.input['urgency_level'], subscription.input['point'] = min(km, 30), st.session_state.freq, p_v, veh_dict[u_v]["budget"], w_v, (10 if is_u else 1), st.session_state.point
+if km_final > 0:
+    st.markdown("<hr style='border: 1px dashed #ccc;'/>", unsafe_allow_html=True)
+    
+    can_book = True
+    if "Xe Máy" in user_veh and w_val >= 10:
+        st.error("⛈️ **HỆ THỐNG AN TOÀN:** Thời tiết đang Mưa Bão cực đoan. Để đảm bảo an toàn, dịch vụ Xe Máy tạm ngưng. Vui lòng chuyển sang đặt Ô-tô ở bảng bên trên!")
+        can_book = False
+    elif "Xe Máy" in user_veh and w_val == 8:
+        st.warning("☔ Trời đang có mưa. Dịch vụ Xe Máy vẫn hoạt động bình thường, nhưng khuyên dùng Ô-tô để có trải nghiệm tốt nhất nha!")
+        
+    st.error(f"🚦 **Cảnh báo từ vệ tinh:** Tình trạng giao thông trên tuyến đường hiện tại đang: **{st.session_state.demo_traffic}**")
+    
+    if can_book:
+        peak_val = 10 if "Thông" in st.session_state.demo_traffic else 50 if "Ùn" in st.session_state.demo_traffic else 90
+        st.subheader(f" Hóa đơn Cuốc xe - {user_veh.split('(')[0]} ({km_final:.2f} km)")
+        
+        base_price = km_final * base_rate
+        surge_multiplier = 1.0 + (peak_val / 200) + (w_val / 30) 
+        
+        subscription.input['distance'] = min(km_final, 30)
+        subscription.input['frequency'] = st.session_state.freq
+        subscription.input['peak_ratio'] = peak_val
+        subscription.input['budget_flex'] = budget_val
+        subscription.input['weather'] = w_val
+        subscription.input['urgency_level'] = final_urgency
+        subscription.input['point'] = st.session_state.point
         subscription.compute()
-        o_p, o_pts = subscription.output['price'], subscription.output['reward_pts']
-        pkg_n, pkg_d = get_package_info(o_p)
-        f_p = km * veh_dict[u_v]["rate"] * (1.4 if is_u else 1.0)
+        
+        out_price = subscription.output['price']
+        out_pts = subscription.output['reward_pts']
+        pkg_name, pkg_desc = get_package_info(out_price)
+        
+        urgent_surcharge_normal = 1.4 if is_urgent else 1.0
+        urgent_surcharge_eco = 1.2 if is_urgent else 1.0 
+        
+        surge_price = base_price * surge_multiplier * urgent_surcharge_normal
+        final_pay = surge_price
         
         if st.session_state.package:
-            if st.session_state.package == "Gói Doanh Nhân": f_p = 0
-            elif st.session_state.package == "Gói Đi Làm" and "Ô tô" in u_v and w_v >= 7: f_p = km * 6000
-            elif st.session_state.package == "Gói Eco" and "Xe Máy" in u_v and km < 5: f_p = 0
+            if st.session_state.package == "Gói Doanh Nhân":
+                final_pay = 0
+                st.info("🚀 **ÁP DỤNG ĐẶC QUYỀN DOANH NHÂN:** Chuyến đi này hoàn toàn MIỄN PHÍ!")
+                
+            elif st.session_state.package == "Gói Đi Làm":
+                if "Ô tô" in user_veh and w_val >= 7:
+                    final_pay = (km_final * veh_dict["🏍️ Xe Máy Thường"]["rate"]) * urgent_surcharge_eco
+                    st.info("**ÁP DỤNG ĐẶC QUYỀN ĐI LÀM:** Mưa to, nâng cấp cuốc Ô-tô nhưng CHỈ TÍNH TIỀN THEO GIÁ XE MÁY!")
+                else:
+                    final_pay = base_price * urgent_surcharge_eco
+                    if is_urgent:
+                        st.info(" **ÁP DỤNG ĐẶC QUYỀN ĐI LÀM:** Khóa giá gốc và ĐƯỢC GIẢM 50% Phụ phí Hỏa Tốc.")
+                    else:
+                        st.info(" **ÁP DỤNG ĐẶC QUYỀN ĐI LÀM:** Khóa giá gốc, miễn 100% phụ phí kẹt xe/mưa bão.")
+                        
+            elif st.session_state.package == "Gói Premium":
+                final_pay = base_price
+                if is_urgent:
+                    st.info(" **ÁP DỤNG ĐẶC QUYỀN PREMIUM:** Khóa giá gốc. Đã MIỄN PHÍ 100% cước Hỏa Tốc!")
+                else:
+                    st.info("**ÁP DỤNG ĐẶC QUYỀN PREMIUM:** Khóa giá và điều phối tài xế VIP ưu tiên đón.")
+                    
+            elif st.session_state.package == "Gói Eco":
+                if "Xe Máy" not in user_veh:
+                    final_pay = base_price * urgent_surcharge_eco
+                    st.warning("⚠️ **QUY ĐỊNH GÓI ECO:** Đặc quyền Miễn phí dưới 5km CHỈ ÁP DỤNG cho Xe Máy. Chuyến Ô-tô này của bạn sẽ bị tính giá gốc.")
+                else:
+                    if km_final < 5:
+                        final_pay = 0
+                        st.info("🌱 **ÁP DỤNG ĐẶC QUYỀN ECO:** Cuốc Xe Máy dưới 5km được MIỄN PHÍ!")
+                    else:
+                        final_pay = base_price * urgent_surcharge_eco
+                        if is_urgent:
+                            st.info(" **ÁP DỤNG ĐẶC QUYỀN ECO:** Khóa giá chuyến đi. ĐƯỢC GIẢM 50% Phụ phí Hỏa Tốc.")
+                        else:
+                            st.info(" **ÁP DỤNG ĐẶC QUYỀN ECO:** Khóa giá chuyến đi gốc.")
 
-        st.metric("💳 THANH TOÁN:", f"{int(f_p):,} VNĐ")
-        if st.button(" ĐẶT XE", type="primary"):
-            st.session_state.loyalty_points_wallet += (int(o_pts) if f_p > 0 else 0)
-            st.balloons(); st.success("Xong!"); time.sleep(1); st.rerun()
+        col_rs1, col_rs2 = st.columns(2)
+        with col_rs1:
+            st.metric("💳 CƯỚC PHÍ CẦN THANH TOÁN:", f"{int(final_pay):,} VNĐ")
+            if not st.session_state.package and surge_price > base_price:
+                st.caption("⚠️ *Giá cuốc lẻ đang bị cộng thêm phụ phí do tình trạng kẹt xe/thời tiết hoặc gọi Hỏa Tốc.*")
+        
+        with col_rs2:
+            st.write(" ")
+            btn_text = " XÁC NHẬN ĐẶT CHUYẾN NGAY"
+            if st.button(btn_text, use_container_width=True, type="primary"):
+                noti = st.empty()
+                
+                if final_pay == 0:
+                    earned_pts = 0
+                    pt_msg = " Chuyến đi 0đ KHÔNG áp dụng tích lũy điểm thưởng để chống trục lợi."
+                else:
+                    earned_pts = int(out_pts)
+                    pt_msg = f"Dự kiến nhận +{earned_pts} điểm thưởng."
 
-        st.subheader(" Gợi ý gói cước")
-        if not st.session_state.package: st.success(f"🤖 Gợi ý: **{pkg_n}**\n\n{pkg_d}")
+                if st.session_state.package and st.session_state.is_trial:
+                    st.session_state.package = None 
+                    st.session_state.is_trial = False 
+                    noti.success(' Đang tìm tài xế...')
+                    st.warning(" Chuyến đi trải nghiệm KHÔNG áp dụng tích điểm. Gói dùng thử đã hết hạn.")
+                else:
+                    st.session_state.loyalty_points_wallet += earned_pts 
+                    noti.success(f'🎉 Đang tìm tài xế... {pt_msg}')
+
+                with st.spinner("Vui lòng đợi tài xế xác nhận..."):
+                    time.sleep(2.5)
+                    
+                st.balloons()
+                noti.info(" Chuyến đi đã hoàn thành! Cảm ơn bạn đã lựa chọn MonthlyGo.")
+                time.sleep(2)
+                
+                if "start" in st.session_state: del st.session_state["start"]
+                if "end" in st.session_state: del st.session_state["end"]
+                if "start_quick" in st.session_state: del st.session_state["start_quick"]
+                if "end_quick" in st.session_state: del st.session_state["end_quick"]
+                st.rerun()
+
+        st.markdown("<hr style='border: 1px dashed #ccc;'/>", unsafe_allow_html=True)
+        st.subheader(" Siêu thị Đặc Quyền MonthlyGo")
+        
+        if not st.session_state.package:
+            st.success(f"🤖 **AI SMART SUGGESTION:** Dựa trên thói quen và lộ trình hiện tại, hệ thống MonthlyGo khuyến nghị bạn nên chọn **{pkg_name}**.\n\n{pkg_desc}\n\n🔥 *Đặc biệt: Khi ĐĂNG KÝ gói này, bạn sẽ được nhân **x{out_pts:.0f} Điểm Thưởng** sau mỗi chuyến đi!*")
+        else:
+            st.info("Cảm ơn bạn đã đồng hành cùng MonthlyGo. Bạn đang được bảo vệ bởi hệ thống giá nội bộ!")
+
+        st.write("**Khám phá các Gói cước (Chỉ được Dùng Thử 1 lần duy nhất cho mỗi gói):**")
+        cols = st.columns(4)
+        for idx, p_name in enumerate(ALL_PACKAGES):
+            with cols[idx]:
+                st.markdown(f"**{p_name}**")
+                
+                if st.button(f"🛒 Đăng ký Gói", key=f"buy_{p_name}", use_container_width=True):
+                    st.session_state.package = p_name
+                    st.session_state.is_trial = False 
+                    st.toast(f'Cảm ơn bạn đã mua {p_name}! Áp dụng đặc quyền tức thì.')
+                    st.rerun()
+                
+                if p_name not in st.session_state.used_trials:
+                    if st.button(f" Dùng thử", key=f"trial_{p_name}", use_container_width=True):
+                        st.session_state.package = p_name
+                        st.session_state.is_trial = True 
+                        st.session_state.used_trials.append(p_name) 
+                        st.toast(f'Đã kích hoạt 1 lượt dùng thử {p_name}!')
+                        st.rerun()
+                else:
+                    st.button("🔒 Đã dùng thử", key=f"lock_{p_name}", disabled=True, use_container_width=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.expander("👨‍🏫 BIỂU ĐỒ GIẢI MỜ CENTROID (Admin Data)", expanded=False):
+            fig, ax = plt.subplots(figsize=(8, 3))
+            x_price = np.arange(200, 1001, 1)
+            ax.plot(x_price, fuzz.trimf(x_price, [200, 200, 400]), 'b', label='Eco')
+            ax.plot(x_price, fuzz.trimf(x_price, [200, 400, 600]), 'g', label='Đi Làm')
+            ax.plot(x_price, fuzz.trimf(x_price, [400, 600, 800]), 'r', label='Premium')
+            ax.plot(x_price, fuzz.trimf(x_price, [600, 800, 1000]), 'c', label='VIP')
+            
+            ax.axvline(x=out_price, color='k', linestyle='--', linewidth=2, label=f'Centroid: {out_price:.0f}')
+            ax.set_title("Biểu đồ Suy diễn Hệ mờ MonthlyGo")
+            ax.legend()
+            st.pyplot(fig)
