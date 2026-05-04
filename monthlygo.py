@@ -310,7 +310,7 @@ if not st.session_state.logged_in:
     with tab1:
         st.info("Trải nghiệm luồng Khách hàng. Các thông số sẽ bị ẩn, chỉ hiển thị UI thân thiện.")
         user_input = st.text_input("Tên của bạn:", key="new_user_input", placeholder="VD: Thanh Nhã...")
-        if st.button("🚀 Bắt Đầu Ngay (Khách thật)", type="primary"):
+        if st.button(" Bắt Đầu Ngay (Khách thật)", type="primary"):
             if user_input.strip() == "": st.error("Vui lòng nhập tên!")
             else:
                 st.session_state.logged_in = True
@@ -327,7 +327,7 @@ if not st.session_state.logged_in:
     with tab2:
         st.info("Dành cho Developer: Bật khóa công cụ ép giá, ép thời tiết, ép gói cước bên Sidebar.")
         mock_choice = st.selectbox("Chọn Hồ sơ Giả lập:", list(MOCK_ACCOUNTS.keys()))
-        if st.button("🧪 Chạy Demo App"):
+        if st.button(" Chạy Demo App"):
             st.session_state.logged_in = True
             st.session_state.is_demo = True 
             st.session_state.user_name = mock_choice.split(" (")[0]
@@ -355,7 +355,7 @@ with st.sidebar:
     
     with st.expander("🛰️ ĐIỀU KHIỂN VỆ TINH (Presenter)", expanded=True):
         st.caption("Chỉnh thông số trước, Khách chọn đường xong mới thấy:")
-        st.session_state.demo_traffic = st.selectbox("🚦 Ép Kẹt xe:", ["Thông thoáng 🟢", "Ùn ứ 🟡", "Kẹt Cứng 🔴"])
+        st.session_state.demo_traffic = st.selectbox(" Tình trạng giao thông:", ["Thông thoáng 🟢", "Ùn ứ 🟡", "Kẹt Cứng 🔴"])
         
     if st.session_state.is_demo:
         with st.expander("🛠️ ADMIN PANEL (Ép Profile/Gói/Thời Tiết)", expanded=True):
@@ -376,7 +376,7 @@ with st.sidebar:
                 if force_pkg != "-- Chọn gói --":
                     st.session_state.package = force_pkg
                     st.session_state.is_trial = False
-                    st.toast(f"Đã bơm {force_pkg} thành công!", icon='💉')
+                    st.toast(f"Đã bơm {force_pkg} thành công!")
                     st.rerun()
     
     if st.button("🔴 Đăng xuất MonthlyGo"):
