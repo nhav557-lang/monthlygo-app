@@ -1,0 +1,10 @@
+streamlit
+numpy
+scikit-fuzzy
+requests
+folium
+streamlit-folium
+polyline
+geopy
+streamlit-searchbox
+matplotlib
