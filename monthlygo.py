@@ -352,7 +352,7 @@ with st.sidebar:
             st.session_state.freq = st.slider("Tần suất đi:", 0, 10, st.session_state.freq)
             st.session_state.point = st.slider("Điểm Loyalty:", 0, 10, st.session_state.point)
             force_pkg = st.selectbox("Bơm trực tiếp Gói:", ["-- Chọn gói --"] + ALL_PACKAGES)
-            if st.button("💉 Bơm Gói"):
+            if st.button("Bơm Gói"):
                 if force_pkg != "-- Chọn gói --":
                     st.session_state.package = force_pkg
                     st.toast(f"Đã bơm {force_pkg}!")
@@ -374,7 +374,7 @@ with col_p:
         if st.button("❌ Hủy Gói"):
             st.session_state.package = None
             st.rerun()
-    else: st.info("💡 Bạn chưa đăng ký gói cước nào.")
+    else: st.info(" Bạn chưa đăng ký gói cước nào.")
 with col_w:
     st.markdown(f"<div class='wallet-box'><h4>🌟 Ví Điểm: <span style='font-size:28px;'>{st.session_state.loyalty_points_wallet}</span></h4></div>", unsafe_allow_html=True)
 
@@ -401,7 +401,13 @@ with c1:
     e_c = st.selectbox("🏁 Điểm Đến:", [" Tự nhập"] + list(QUICK_LOCATIONS.keys()), key="eq")
     e_l = QUICK_LOCATIONS[e_c] if e_c != " Tự nhập" else st_searchbox(search_address, key="e")
     
-    veh_dict = {"🏍️ Xe Máy Thường": {"rate": 6000, "budget": 2}, "🚗 Ô tô 4 Chỗ": {"rate": 12000, "budget": 5}}
+    veh_dict = {
+               " Xe Máy Thường": {"rate": 6000, "budget": 2},
+        " Xe Máy VIP": {"rate": 8000, "budget": 4},
+        " Ô tô 4 Chỗ Thường": {"rate": 12000, "budget": 5},
+        " Ô tô 4 Chỗ VIP": {"rate": 16000, "budget": 8},
+        " Ô tô 7 Chỗ": {"rate": 15000, "budget": 7},
+        "Ô tô 7 Chỗ VIP": {"rate": 20000, "budget": 10}}
     u_v = st.selectbox("Phương tiện:", list(veh_dict.keys()))
     is_u = st.checkbox("⚡ Đặt Hỏa Tốc")
     km, path = 0.0, []
@@ -417,7 +423,7 @@ with c2:
 if km > 0:
     st.markdown("---")
     can_b = True
-    if "Xe Máy" in u_v and w_v >= 10: st.error("⛈️ Bão cực đoan, ngưng xe máy!"); can_b = False
+    if "Xe Máy" in u_v and w_v >= 10: st.error(" Bão cực đoan, ngưng xe máy!"); can_b = False
     if can_b:
         p_v = 10 if "Thông" in st.session_state.demo_traffic else 90
         subscription.input['distance'], subscription.input['frequency'], subscription.input['peak_ratio'], subscription.input['budget_flex'], subscription.input['weather'], subscription.input['urgency_level'], subscription.input['point'] = min(km, 30), st.session_state.freq, p_v, veh_dict[u_v]["budget"], w_v, (10 if is_u else 1), st.session_state.point
@@ -432,7 +438,7 @@ if km > 0:
             elif st.session_state.package == "Gói Eco" and "Xe Máy" in u_v and km < 5: f_p = 0
 
         st.metric("💳 THANH TOÁN:", f"{int(f_p):,} VNĐ")
-        if st.button("🚕 ĐẶT XE", type="primary"):
+        if st.button(" ĐẶT XE", type="primary"):
             st.session_state.loyalty_points_wallet += (int(o_pts) if f_p > 0 else 0)
             st.balloons(); st.success("Xong!"); time.sleep(1); st.rerun()
 
